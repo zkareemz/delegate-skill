@@ -1,0 +1,35 @@
+{
+  "name": "delegate-skill",
+  "version": "0.1.0",
+  "description": "Delegate a coding task from your AI agent to a separate CLI agent (the pi CLI in v1), then review the diff and land it yourself.",
+  "type": "module",
+  "license": "MIT",
+  "author": "zkareemz",
+  "homepage": "https://github.com/zkareemz/delegate-skill",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zkareemz/delegate-skill.git"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "skill",
+    "delegate",
+    "pi",
+    "claude-code"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "check-sync": "node scripts/check-sync.mjs",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.5.0"
+  }
+}

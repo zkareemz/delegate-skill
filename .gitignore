@@ -1,0 +1,8 @@
+node_modules/
+*.log
+.DS_Store
+dist/
+*.tsbuildinfo
+
+# The compiled relay IS committed (the skills CLI copies it as-is) — do NOT ignore it:
+# skills/delegate-pi/scripts/relay.mjs
