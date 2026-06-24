@@ -15,6 +15,14 @@ pi --list-models      # confirm a provider/model is configured and reachable
 ## Dispatching
 
 ```bash
+# Recommended: pass the brief on stdin (a heredoc). No file is written, so it works under any
+# harness's file-permission sandbox (e.g. OpenCode confines edits to the project dir) and leaves
+# nothing in the repo. Pick a delimiter the brief won't contain.
+node "<skill-dir>/scripts/relay.mjs" --cd /path/to/repo <<'DELEGATE_BRIEF'
+…your full self-contained brief here…
+DELEGATE_BRIEF
+
+# Alternative (only if your harness permits writing the file outside the repo):
 node "<skill-dir>/scripts/relay.mjs" --brief brief.txt --cd /path/to/repo
 ```
 
@@ -26,7 +34,7 @@ Options:
 
 | Flag | Effect |
 | --- | --- |
-| `--brief <file>` | The brief. Omit it to read the brief from stdin (`node relay.mjs … < brief.txt`). |
+| `--brief <file>` | Optional brief file. **Omit it to read the brief from stdin** (recommended — heredoc or pipe; no file write, sandbox-safe). |
 | `--cd <dir>` | Working root for pi (default: current directory). pi has no `--cd`; the relay sets the child process's cwd. |
 | `--model <name>` | Model override (default: pi's own configured default). |
 | `--provider <name>` | Provider override (default: pi's own configured default). |

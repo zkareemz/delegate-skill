@@ -2,8 +2,8 @@
 
 This repo is a [Skills CLI](https://github.com/vercel-labs/skills) package of **delegation skills** —
 skills that let an orchestrating agent drive a separate CLI coding agent as an implementer, then review
-and land the result. The first skill is `delegate-pi` (the `pi` CLI); siblings like `delegate-codex` can
-be added later without renaming the repo.
+and land the result. Two skills ship today — `delegate-pi` (the `pi` CLI) and `delegate-opencode` (the
+`opencode` CLI); siblings like `delegate-codex` can be added later without renaming the repo.
 
 ## Architecture
 
@@ -33,13 +33,15 @@ jargon. Use these terms; don't invent synonyms.
 | **land** | commit the verified work yourself | — |
 | **relay** / `relay.mjs` | the dispatch **script** only | never a *category* of skills |
 
-pi's own terms (`--mode json`, `--session-id`, `session`/`agent_end` events) — use verbatim; don't
+Each target's own terms — pi's (`--mode json`, `--session-id`, `session`/`agent_end` events),
+opencode's (`run --format json`, `--session`, `sessionID`/`text` events) — use verbatim; don't
 paraphrase them.
 
 Banned on sight: coined umbrella terms in user-facing surfaces (README headings, `skills.sh.json`
 titles); any reference to the author's local machine or config; model/version pins where a
 version-neutral phrasing works; and claims that can't be verified ("verified" without a run → hedge or
-cut). Every CLI flag, field, and command in the docs must match the installed `pi` and `relay.mjs`.
+cut). Every CLI flag, field, and command in the docs must match the installed target (`pi` /
+`opencode`) and `relay.mjs`.
 
 ## Conventions
 
@@ -50,16 +52,16 @@ cut). Every CLI flag, field, and command in the docs must match the installed `p
   what the skill does and when to use it, phrased to trigger reliably. Keep it **under 1024 characters**.
 - **Progressive disclosure:** keep `SKILL.md` lean; push depth into `references/*.md` that load only when
   needed.
-- **Executables:** keep them minimal and inspectable. The only one is the compiled
-  `skills/delegate-pi/scripts/relay.mjs` — Node built-ins only, no dependencies, no network calls of its
-  own, no credentials, no telemetry, and it never commits. Edit the TypeScript in `src/`, never the
-  compiled `relay.mjs` directly.
+- **Executables:** keep them minimal and inspectable. The only ones are the compiled
+  `skills/*/scripts/relay.mjs` (one per target, same engine) — Node built-ins only, no dependencies, no
+  network calls of their own, no credentials, no telemetry, and they never commit. Edit the TypeScript
+  in `src/`, never the compiled `relay.mjs` directly.
 
 ## Before publishing a change
 
 - `npm run typecheck && npm run build && npm run check-sync && npm run smoke`.
 - Validate the package layout: `npx skills@latest add . --list`.
-- If you touched the relay, smoke-test a real `pi` run against a throwaway git repo before relying on it.
+- If you touched the relay, smoke-test a real target run (`pi` / `opencode`) against a throwaway git repo before relying on it.
 - Keep the README's trust section honest — claim only what's been run.
 
 ## Local Claude Code config

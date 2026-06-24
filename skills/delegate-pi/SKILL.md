@@ -63,11 +63,18 @@ use that same directory (if unsure, run `find ~ -name relay.mjs -path '*delegate
 folder above it).
 
 ```bash
-node "<skill-dir>/scripts/relay.mjs" --brief brief.txt --cd /path/to/repo
+node "<skill-dir>/scripts/relay.mjs" --cd /path/to/repo <<'DELEGATE_BRIEF'
+…your full self-contained brief here…
+DELEGATE_BRIEF
 # pick a model/provider:                  add --model <name>  and/or  --provider <name>
 # continue the previous pi session:       add --session-id <id> --resume   (send only the delta brief)
 # see all options:                        node "<skill-dir>/scripts/relay.mjs" --help
 ```
+
+**Pass the brief on stdin (the heredoc above) — do not write a brief file.** A stdin brief needs no
+file write, so it works under any harness's file-permission sandbox (e.g. OpenCode confines edits to
+the project directory) and leaves no stray file in the repo. Pick a heredoc delimiter the brief won't
+contain. `--brief <file>` still works if your harness allows writing the file somewhere outside the repo.
 
 pi edits the working tree directly and runs its own tools autonomously; the helper writes its
 artifacts to a temp dir, so the repo under review stays clean. It **never commits** — see step 5.
