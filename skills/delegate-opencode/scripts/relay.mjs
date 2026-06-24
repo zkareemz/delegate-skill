@@ -338,7 +338,7 @@ function main(adapter) {
   dispatch(adapter, ctx, writeResult);
 }
 
-// src/adapters/pi.ts
+// src/adapters/opencode.ts
 function parseLines(events) {
   const out = [];
   for (const line of events.split("\n")) {
@@ -350,53 +350,44 @@ function parseLines(events) {
   }
   return out;
 }
-function assistantText(msg) {
-  if (!msg || !Array.isArray(msg.content)) return "";
-  return msg.content.filter((c) => c && c.type === "text" && typeof c.text === "string").map((c) => c.text).join("").trim();
+function resolveModel(ctx) {
+  const { model, provider } = ctx.opts;
+  if (model && provider && !model.includes("/")) return `${provider}/${model}`;
+  return model;
 }
-function buildBase(ctx) {
-  const { opts, sessionId } = ctx;
-  const argv = ["-p", "--mode", "json", "--session-id", sessionId];
-  if (opts.model) argv.push("-m", opts.model);
-  if (opts.provider) argv.push("--provider", opts.provider);
-  return argv;
-}
-var piAdapter = {
-  name: "pi",
+var opencodeAdapter = {
+  name: "opencode",
   versionArgv: ["--version"],
   sendBrief: "argv",
-  buildArgv: buildBase,
-  // pi continues a conversation by reusing the same --session-id, so resume argv is identical.
-  buildResumeArgv: buildBase,
+  buildArgv(ctx) {
+    const argv = ["run", "--format", "json"];
+    const model = resolveModel(ctx);
+    if (model) argv.push("-m", model);
+    return argv;
+  },
+  buildResumeArgv(ctx) {
+    return ["run", "--format", "json", "--session", ctx.sessionId];
+  },
   parseSessionId(events) {
     for (const event of parseLines(events)) {
-      if (event.type === "session" && typeof event.id === "string") return event.id;
+      if (typeof event.sessionID === "string" && event.sessionID) return event.sessionID;
     }
     return null;
   },
   parseFinalMessage(events) {
-    let agentEndMessages = null;
-    let lastTurnAssistant;
+    const parts = [];
     for (const event of parseLines(events)) {
-      if (event.type === "agent_end" && Array.isArray(event.messages)) {
-        agentEndMessages = event.messages;
-      }
-      const msg = event.message;
-      if (msg && msg.role === "assistant" && (event.type === "turn_end" || event.type === "message_end")) {
-        lastTurnAssistant = msg;
+      const part = event.part;
+      if (event.type === "text" && part && typeof part.text === "string") {
+        parts.push({ messageID: part.messageID, text: part.text });
       }
     }
-    if (agentEndMessages) {
-      for (let i = agentEndMessages.length - 1; i >= 0; i -= 1) {
-        if (agentEndMessages[i]?.role === "assistant") {
-          const text = assistantText(agentEndMessages[i]);
-          if (text) return text;
-        }
-      }
-    }
-    return assistantText(lastTurnAssistant);
+    if (!parts.length) return "";
+    const lastId = parts[parts.length - 1].messageID;
+    const chosen = lastId ? parts.filter((p) => p.messageID === lastId) : [parts[parts.length - 1]];
+    return chosen.map((p) => p.text).join("").trim();
   }
 };
 
-// src/entries/delegate-pi.ts
-main(piAdapter);
+// src/entries/delegate-opencode.ts
+main(opencodeAdapter);

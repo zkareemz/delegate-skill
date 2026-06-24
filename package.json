@@ -1,7 +1,7 @@
 {
   "name": "delegate-skill",
   "version": "0.1.0",
-  "description": "Delegate a coding task from your AI agent to a separate CLI agent (the pi CLI in v1), then review the diff and land it yourself.",
+  "description": "Delegate a coding task from your AI agent to a separate CLI agent (the pi or opencode CLI), then review the diff and land it yourself.",
   "type": "module",
   "license": "MIT",
   "author": "zkareemz",
@@ -19,6 +19,7 @@
     "skill",
     "delegate",
     "pi",
+    "opencode",
     "claude-code"
   ],
   "scripts": {

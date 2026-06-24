@@ -21,12 +21,11 @@ import type { Adapter, RelayOptions, RunContext } from "./types";
 import { isGitRepo, gitTouchedFiles } from "./git";
 import { makeResultWriter, printSummary } from "./result";
 import { dispatch } from "./run";
-import { piAdapter } from "../adapters/pi";
 
-// v1 has exactly one target. Selecting among adapters later is a one-line change here.
-const adapter: Adapter = piAdapter;
-
-const HELP = `delegate-skill relay — dispatch a brief to the ${adapter.name} CLI and capture the run.
+// The engine is target-agnostic: a thin per-skill entry point picks the adapter and calls
+// main(adapter). Adding a target is one adapter + one entry, with no change in here.
+function helpText(adapter: Adapter): string {
+  return `delegate-skill relay — dispatch a brief to the ${adapter.name} CLI and capture the run.
 
 Usage:
   node relay.mjs --brief <file> [options]
@@ -48,13 +47,14 @@ Result: <out-dir>/result.json plus a summary on stdout. Exit codes: usage error 
 (no file written), target missing 127 (writes result with status target_unavailable),
 otherwise the target's own exit code.
 `;
+}
 
 function fail(message: string, code = 2): never {
   process.stderr.write(`relay: ${message}\n`);
   process.exit(code);
 }
 
-function parseArgs(argv: string[]): RelayOptions {
+function parseArgs(argv: string[], help: string): RelayOptions {
   const opts: RelayOptions = {
     brief: null,
     cd: process.cwd(),
@@ -76,7 +76,7 @@ function parseArgs(argv: string[]): RelayOptions {
     switch (arg) {
       case "-h":
       case "--help":
-        process.stdout.write(HELP);
+        process.stdout.write(help);
         process.exit(0);
       // eslint-disable-next-line no-fallthrough
       case "--brief":
@@ -122,7 +122,7 @@ function readBrief(opts: RelayOptions): string {
   }
 }
 
-function targetVersion(): string | null {
+function targetVersion(adapter: Adapter): string | null {
   try {
     return execFileSync(adapter.name, adapter.versionArgv, {
       encoding: "utf8",
@@ -156,8 +156,8 @@ function prepareRunDir(opts: RelayOptions, briefText: string, sessionId: string)
   return ctx;
 }
 
-function main(): void {
-  const opts = parseArgs(process.argv.slice(2));
+export function main(adapter: Adapter): void {
+  const opts = parseArgs(process.argv.slice(2), helpText(adapter));
   const briefText = readBrief(opts);
   if (!briefText.trim()) {
     fail("empty brief (pass --brief <file> or pipe the brief on stdin)");
@@ -172,7 +172,7 @@ function main(): void {
 
   const before = gitTouchedFiles(opts.cd);
   const dirtyBefore = Array.isArray(before) && before.length > 0;
-  const version = targetVersion();
+  const version = targetVersion(adapter);
   const sessionId = opts.sessionId ?? randomUUID();
   const ctx = prepareRunDir(opts, briefText, sessionId);
   const startedAt = new Date().toISOString();
@@ -201,5 +201,3 @@ function main(): void {
 
   dispatch(adapter, ctx, writeResult);
 }
-
-main();
